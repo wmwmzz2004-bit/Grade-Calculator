@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4th Year Medicine Grade Calculator</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        background: #f4f6f9;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #1f3c88;
+        margin-bottom: 10px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 25px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: center;
+    }
+
+    th {
+        background: #1f3c88;
+        color: white;
+    }
+
+    select, input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 25px;
+        background: #1f3c88;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 17px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #16306f;
+    }
+
+    .results {
+        margin-top: 25px;
+        background: #eef4ff;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .result-item {
+        font-size: 20px;
+        margin: 10px 0;
+    }
+
+    .final-grade {
+        font-size: 28px;
+        font-weight: bold;
+        color: #0a7a28;
+    }
+
+    @media (max-width: 700px) {
+        table {
+            font-size: 14px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>4th Year Grade Calculator</h1>
+    <p class="subtitle">
+        Calculates weighted average and final grade out of 20
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Weight</th>
+                <th>Grade Type</th>
+                <th>Exact Mark (if selected)</th>
+            </tr>
+        </thead>
+
+        <tbody id="subjectsTable"></tbody>
+    </table>
+
+    <button onclick="calculateGrade()">
+        Calculate
+    </button>
+
+    <div class="results" id="results" style="display:none;">
+        <div class="result-item">
+            Weighted Average: <strong id="avg100"></strong>/100
+        </div>
+
+        <div class="result-item final-grade">
+            Final Grade: <span id="grade20"></span>/20
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+const subjects = [
+    {name:"Internal Medicine", weight:12},
+    {name:"Community Medicine", weight:10},
+    {name:"Surgery", weight:9},
+    {name:"Obstetrics", weight:8},
+    {name:"Forensic Medicine", weight:6},
+    {name:"Pathology", weight:5.5},
+    {name:"Medical Ethics", weight:2}
+];
+
+const rankValues = {
+    "maqbool":55,
+    "mutawasit":65,
+    "jayyid":75,
+    "jayyidjiddan":85,
+    "imtiyaz":95
+};
+
+const rankLabels = {
+    "maqbool":"مقبول (55)",
+    "mutawasit":"متوسط (65)",
+    "jayyid":"جيد (75)",
+    "jayyidjiddan":"جيد جدا (85)",
+    "imtiyaz":"امتياز (95)"
+};
+
+const table = document.getElementById("subjectsTable");
+
+subjects.forEach((subject, index) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+        <td>${subject.name}</td>
+        <td>${subject.weight}</td>
+
+        <td>
+            <select id="select-${index}"
+                    onchange="toggleInput(${index})">
+
+                <option value="exact">Exact Mark</option>
+
+                <option value="maqbool">
+                    ${rankLabels.maqbool}
+                </option>
+
+                <option value="mutawasit">
+                    ${rankLabels.mutawasit}
+                </option>
+
+                <option value="jayyid">
+                    ${rankLabels.jayyid}
+                </option>
+
+                <option value="jayyidjiddan">
+                    ${rankLabels.jayyidjiddan}
+                </option>
+
+                <option value="imtiyaz">
+                    ${rankLabels.imtiyaz}
+                </option>
+
+            </select>
+        </td>
+
+        <td>
+            <input
+                type="number"
+                id="mark-${index}"
+                min="0"
+                max="100"
+                placeholder="0-100">
+        </td>
+    `;
+
+    table.appendChild(row);
+});
+
+function toggleInput(index){
+
+    const select = document.getElementById(`select-${index}`);
+    const input = document.getElementById(`mark-${index}`);
+
+    if(select.value === "exact"){
+        input.disabled = false;
+        input.style.opacity = 1;
+    } else {
+        input.disabled = true;
+        input.value = "";
+        input.style.opacity = 0.5;
+    }
+}
+
+function calculateGrade(){
+
+    let weightedSum = 0;
+    let totalWeight = 52.5;
+
+    for(let i = 0; i < subjects.length; i++){
+
+        const selection =
+            document.getElementById(`select-${i}`).value;
+
+        let mark;
+
+        if(selection === "exact"){
+
+            const input =
+                document.getElementById(`mark-${i}`).value;
+
+            if(input === ""){
+                alert(
+                    `Please enter a mark for ${subjects[i].name}`
+                );
+                return;
+            }
+
+            mark = parseFloat(input);
+
+            if(mark < 0 || mark > 100){
+                alert(
+                    `Invalid mark in ${subjects[i].name}`
+                );
+                return;
+            }
+
+        } else {
+
+            mark = rankValues[selection];
+
+        }
+
+        weightedSum += mark * subjects[i].weight;
+    }
+
+    const weightedAverage =
+        weightedSum / totalWeight;
+
+    const finalGrade =
+        weightedAverage / 5;
+
+    document.getElementById("avg100")
+        .textContent = weightedAverage.toFixed(2);
+
+    document.getElementById("grade20")
+        .textContent = finalGrade.toFixed(2);
+
+    document.getElementById("results")
+        .style.display = "block";
+}
+
+</script>
+
+</body>
+</html>
